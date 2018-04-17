@@ -6,6 +6,8 @@ from util import ml
 train_data = pd.read_excel('/home/liangoy/Downloads/p2ptrain.xlsx')
 test_data = pd.read_excel('/home/liangoy/Downloads/p2ptest.xlsx')
 
+train_data = pd.concat((train_data, test_data))
+
 batch_size = len(test_data)
 
 
