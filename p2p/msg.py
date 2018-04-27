@@ -55,7 +55,7 @@ lis = []
 with tf.variable_scope('RNN'):
     for timestep in range(word_size):
         if timestep == 1:
-            tf.get_variable_scope().reuse_variables()
+            tf.Variable_scope().reuse_variables()
         (cell_output, state) = gru(ml.bn_with_wb(embed[:, timestep]), state)
     out_put = state
 

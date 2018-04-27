@@ -5,9 +5,9 @@ import numpy as np
 from util import ml
 import json
 
-word_size = 1000
+word_size = 64
 embedding_size = 60
-batch_size = 128
+batch_size = 512
 col = pymongo.MongoClient().xingqiao.msg_cut
 data = list(col.find({'createTime':{'$lt':'2017/11/5'}}, {'_id': 0, 'status': 1, 'msgCut': 1}))
 
@@ -54,7 +54,7 @@ lis = []
 with tf.variable_scope('RNN'):
     for timestep in range(word_size):
         if timestep == 1:
-            tf.get_variable_scope().reuse_variables()
+            tf.Variable_scope().reuse_variables()
         (cell_output, state) = gru(embed[:, timestep], state)
     out_put = state
 
@@ -62,8 +62,7 @@ lay1 = tf.nn.elu(ml.layer_basic(out_put, 4))
 lay2 = ml.layer_basic(ml.bn_with_wb(lay1), 1)
 y = tf.nn.sigmoid(lay2[:, 0])
 loss = tf.reduce_sum(-y_ * tf.log(y + 0.000000001) - (1 - y_) * tf.log(1 - y + 0.00000001)) / batch_size / tf.log(2.0)
-optimizer = tf.train.AdamOptimizer(learning_rate=0.001).minimize(-loss)
-# cm = tf.confusion_matrix(y_,y)
+optimizer = tf.train.AdamOptimizer(learning_rate=0.001).minimize(loss)
 # ...................................................................
 sess = tf.Session()
 sess.run(tf.global_variables_initializer())

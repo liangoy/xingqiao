@@ -7,7 +7,7 @@ import json
 
 word_size = 1000
 embedding_size = 60
-batch_size = 512
+batch_size = 256
 col = pymongo.MongoClient().xingqiao.msg_cut
 data = list(col.find({'createTime':{'$lt':'2017/11/5'}}, {'_id': 0, 'status': 1, 'msgCut': 1}))
 
@@ -46,7 +46,7 @@ lis = []
 with tf.variable_scope('RNN'):
     for timestep in range(word_size):
         if timestep == 1:
-            tf.get_variable_scope().reuse_variables()
+            tf.Variable_scope().reuse_variables()
         (cell_output, state) = gru(embed[:, timestep], state)
     out_put = state
 
