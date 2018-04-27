@@ -9,9 +9,9 @@ import json
 
 word_size = 1000
 embedding_size = 60
-batch_size = 64
+batch_size = 128
 col = pymongo.MongoClient().xingqiao.msg_cut
-data = list(col.find({}, {'_id': 0, 'status': 1, 'msgCut': 1}))
+data = list(col.find({'createTime':{'$lt':'2017/11/5'}}, {'_id': 0, 'status': 1, 'msgCut': 1}))[:-700]
 
 data = [i['msgCut'][:word_size] + [i['status']] for i in data]
 
@@ -49,19 +49,15 @@ y_ = tf.placeholder(shape=[batch_size], dtype=tf.float32)
 
 embeddings = tf.constant(embeddings)
 embed = tf.nn.embedding_lookup(embeddings, x)
-input=tf.reshape(embed,[batch_size,word_size,embedding_size,1])
+X=tf.reshape(embed,[batch_size,word_size,embedding_size,1])
 
-c1=ml.conv2d(input,conv_filter=[50,6,1,1],ksize=[1,50,6,1],pool_stride=[1,20,2,1])
-c2=ml.conv2d(c1,conv_filter=[10,3,1,2],ksize=[1,10,6,1],pool_stride=[1,5,3,1])
-c3=ml.conv2d(c2,conv_filter=[2,2,2,4],ksize=[1,2,2,1],pool_stride=[1,2,2,1])
+c1=ml.conv2d(X,conv_filter=[50,60,1,2],padding='VALID',ksize=[1,50,1,1],pool_stride=[1,200,1,1],pool_padding='VALID')
 
-lay1=tf.reshape(c3,[batch_size,-1])
-lay2 = ml.layer_basic(ml.bn_with_wb(lay1), 16)
-lay3 = ml.layer_basic(ml.bn_with_wb(lay2), 4)
-lay4 = ml.layer_basic(ml.bn_with_wb(lay3), 1)
-y = tf.nn.sigmoid(lay4[:, 0])
+lay1=tf.reshape(c1,[batch_size,-1])
+lay2 = ml.layer_basic(ml.bn_with_wb(lay1), 1)
+y = tf.nn.sigmoid(lay2[:, 0])
 loss = tf.reduce_sum(-y_ * tf.log(y + 0.000000001) - (1 - y_) * tf.log(1 - y + 0.00000001)) / batch_size / tf.log(2.0)
-optimizer = tf.train.AdamOptimizer(learning_rate=0.001).minimize(loss)
+optimizer = tf.train.AdamOptimizer(learning_rate=0.005).minimize(loss)
 # ...................................................................
 sess = tf.Session()
 sess.run(tf.global_variables_initializer())
