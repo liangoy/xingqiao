@@ -1,17 +1,15 @@
 import tensorflow as tf
-import jieba
 import pymongo
 import pandas as pd
 import numpy as np
-from tensorflow.contrib.rnn import GRUCell
 from util import ml
 import json
 
 word_size = 1000
 embedding_size = 60
-batch_size = 256
+batch_size = 512
 col = pymongo.MongoClient().xingqiao.msg_cut
-data = list(col.find({}, {'_id': 0, 'status': 1, 'msgCut': 1}))
+data = list(col.find({'createTime':{'$lt':'2017/11/5'}}, {'_id': 0, 'status': 1, 'msgCut': 1}))
 
 data = [i['msgCut'][:word_size] + [i['status']] for i in data]
 
@@ -25,7 +23,7 @@ for i in train_data_neg:
 train_data = pd.DataFrame(train_data)
 test_data = pd.DataFrame(data[-1 * batch_size:])
 
-with open('/home/liangoy/Desktop/yzx_w2vec/30500000')as f:
+with open('/usr/local/oybb/yzx_w2vec/30500000')as f:
     embeddings = json.loads(f.read())
 
 
@@ -42,7 +40,7 @@ y_ = tf.placeholder(shape=[batch_size], dtype=tf.float32)
 embeddings = tf.constant(embeddings)
 embed = tf.nn.embedding_lookup(embeddings, x)
 
-gru = GRUCell(num_units=16, reuse=tf.AUTO_REUSE, activation=tf.nn.elu)
+gru = tf.nn.rnn_cell.GRUCell(num_units=16, reuse=tf.AUTO_REUSE, activation=tf.nn.elu)
 state = gru.zero_state(batch_size, dtype=tf.float32)
 lis = []
 with tf.variable_scope('RNN'):
@@ -53,7 +51,7 @@ with tf.variable_scope('RNN'):
     out_put = state
 
 lay1 = tf.nn.elu(ml.layer_basic(out_put, 4))
-lay2 = ml.layer_basic(ml.bn_with_wb(out_put), 1)
+lay2 = ml.layer_basic(ml.bn_with_wb(lay1), 1)
 y = tf.nn.sigmoid(lay2[:, 0])
 loss = tf.reduce_sum(-y_ * tf.log(y + 0.000000001) - (1 - y_) * tf.log(1 - y + 0.00000001)) / batch_size / tf.log(2.0)
 optimizer = tf.train.AdamOptimizer(learning_rate=0.01).minimize(loss)
@@ -77,4 +75,3 @@ for i in range(10 ** 10):
         qtrain = 1 - len([i for i in train_y + y_train if 0.5 <= i <= 1.5]) / batch_size
 
         print(train_loss, test_loss, qtrain, qtest)
-        print(cm)
