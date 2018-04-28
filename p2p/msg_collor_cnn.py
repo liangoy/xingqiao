@@ -6,13 +6,18 @@ import numpy as np
 from util import ml
 import json
 
-word_size = 1000
+msg_count=1000
+msg_size=100
 embedding_size = 60
 batch_size =1024
-col = pymongo.MongoClient().xingqiao.msg_cut
+col = pymongo.MongoClient().xingqiao.msgCut
 data = list(col.find({'createTime':{'$lt':'2017/11/5'}}, {'_id': 0, 'status': 1, 'msgCut': 1}))
 
-data = [i['msgCut'][:word_size] + [i['status']] for i in data]
+data_x,data_y=[],[]
+for i in data:
+    #todo
+    pass
+
 
 train_data = data[:-1 * batch_size]
 train_data_neg = [i for i in train_data if i[-1] == 0]

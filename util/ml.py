@@ -38,5 +38,5 @@ def conv2d(input, conv_filter, stride=[1, 1, 1, 1], padding='SAME', ksize=None, 
            pool_padding='SAME'):
     w = tf.Variable(tf.random_uniform(conv_filter, -1.0, 1.0))
     b = tf.Variable(tf.random_uniform([conv_filter[-1]], -1.0, 1.0))
-    conv2d_out = tf.nn.elu(tf.nn.conv2d(input, w, strides=stride, padding=padding) + b)
+    conv2d_out = tf.nn.conv2d(input, w, strides=stride, padding=padding) + b
     return tf.nn.max_pool(conv2d_out, ksize=ksize, strides=pool_stride, padding=pool_padding)
