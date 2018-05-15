@@ -1,4 +1,6 @@
 import tensorflow as tf
+import pymongo
+import jieba
 
 
 def bn(x):
@@ -38,5 +40,13 @@ def conv2d(input, conv_filter, stride=[1, 1, 1, 1], padding='SAME', ksize=None, 
            pool_padding='SAME'):
     w = tf.Variable(tf.random_uniform(conv_filter, -1.0, 1.0))
     b = tf.Variable(tf.random_uniform([conv_filter[-1]], -1.0, 1.0))
-    conv2d_out = tf.nn.conv2d(input, w, strides=stride, padding=padding) + b
+    conv2d_out = tf.nn.elu(tf.nn.conv2d(input, w, strides=stride, padding=padding) + b)
     return tf.nn.max_pool(conv2d_out, ksize=ksize, strides=pool_stride, padding=pool_padding)
+
+oo=list(pymongo.MongoClient().xingqiao.dataWithMsg.find())
+w2i={i['word']:i['index'] for i in  pymongo.MongoClient().xingqiao.w2iGt5000.find()}
+def test(text):
+    jc=list(jieba.cut(text))
+    l=([w2i.get(i,1)for i in jc]+[0]*100)[:100]
+    l=[l]*8192
+    return sess.run(y, feed_dict={x:l})[0]

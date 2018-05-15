@@ -20,7 +20,7 @@ cnt = sum([i[-1] for i in train_data]) - len(train_data_neg)
 for i in range(cnt):
     r1 = np.random.randint(len(train_data))
     r2 = np.random.randint(len(train_data_neg))
-    train_data.insert(r1, train_data_neg[r2 - 1])
+    train_data.insert(r1, train_data_neg[r2])
 train_data = pd.DataFrame(train_data)
 
 test_data = data[-1 * batch_size:]
@@ -29,7 +29,7 @@ cnt = sum([i[-1] for i in test_data]) - len(test_data_neg)
 for i in range(cnt):
     r1 = np.random.randint(len(test_data))
     r2 = np.random.randint(len(test_data_neg))
-    test_data.insert(r1, test_data_neg[r2 - 1])
+    test_data.insert(r1, test_data_neg[r2])
 test_data = pd.DataFrame(test_data).sample(batch_size)
 
 
@@ -55,7 +55,7 @@ lis = []
 with tf.variable_scope('RNN'):
     for timestep in range(word_size):
         if timestep == 1:
-            tf.Variable_scope().reuse_variables()
+            tf.get_variable_scope().reuse_variables()
         (cell_output, state) = gru(ml.bn_with_wb(embed[:, timestep]), state)
     out_put = state
 
