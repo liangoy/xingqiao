@@ -59,7 +59,7 @@ gv = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
 # loss=tf.reduce_mean((y-y_)**2)
 l2_loss = tf.contrib.layers.apply_regularization(tf.contrib.layers.l2_regularizer(0.01, scope=None), weights_list=gv)
 all_loss = loss + l2_loss
-optimizer = tf.train.AdamOptimizer(learning_rate=0.001).minimize(loss)
+optimizer = tf.train.AdamOptimizer(learning_rate=0.01).minimize(loss)
 # ...................................................................
 sess = tf.Session()
 sess.run(tf.global_variables_initializer())
@@ -79,5 +79,21 @@ for i in range(10 ** 10):
         train_y = sess.run(y, feed_dict={x: x_train, y_: y_train})
         qtrain = 1 - len([i for i in train_y + y_train if 0.5 <= i <= 1.5]) / batch_size
 
-        print(train_loss, test_loss, qtrain, qtest, sum(test_y * y_test) / sum(test_y),
-              sum(test_y * y_test) / sum(y_test))
+        print(train_loss, test_loss, qtrain, qtest)
+
+with open('/usr/local/oybb/project/xingqiao_data/oneMsg100Gt5000SetTest') as f:
+    final_test_data=json.loads(f.read())
+final_test_data_t=np.array([i for i in final_test_data if i[-1]==1])
+final_test_data_f=np.array([i for i in final_test_data if i[-1]==0])
+def test(batch_size=batch_size,times=10):
+    score=[]
+    for i in range(times):
+        r_t=np.random.randint(0,len(final_test_data_t),int(batch_size/2))
+        r_f=np.random.randint(0,len(final_test_data_f),int(batch_size/2))
+        data=np.concatenate([final_test_data_t[r_t],final_test_data_f[r_f]])
+        s=sess.run(loss, feed_dict={x: data[:,:-1], y_: data[:,-1]})
+        score.append(s)
+    return np.mean(score)
+
+
+

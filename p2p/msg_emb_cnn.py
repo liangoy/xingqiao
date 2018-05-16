@@ -51,7 +51,7 @@ embeddings = tf.constant(embeddings)
 embed = tf.nn.embedding_lookup(embeddings, x)
 X = tf.reshape(embed, [batch_size, word_size, embedding_size, 1])
 
-c1 = ml.conv2d(X, conv_filter=[3, embedding_size, 1, 2], padding='VALID', ksize=[1, 20, 1, 1], pool_stride=[1, 10, 1, 1],
+c1 = ml.conv2d(X, conv_filter=[10, embedding_size, 1, 2], padding='SAME', ksize=[1, 20, 1, 1], pool_stride=[1, 10, 1, 1],
                pool_padding='SAME')
 c2 = ml.conv2d(c1, conv_filter=[4, 1, 2, 4], padding='SAME', ksize=[1, 10, 1, 1], pool_stride=[1, 10, 1, 1],
                pool_padding='SAME')
@@ -66,7 +66,7 @@ gv= tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
 #loss=tf.reduce_mean((y-y_)**2)
 l2_loss=tf.contrib.layers.apply_regularization(tf.contrib.layers.l2_regularizer(0.05, scope=None), weights_list=gv)
 all_loss=loss+l2_loss
-optimizer = tf.train.AdamOptimizer(learning_rate=0.002).minimize(loss)
+optimizer = tf.train.AdamOptimizer(learning_rate=0.01).minimize(loss)
 # ...................................................................
 sess = tf.Session()
 sess.run(tf.global_variables_initializer())
