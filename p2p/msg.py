@@ -8,8 +8,8 @@ from util import ml
 
 vocabulary_size = 9027 + 1
 word_size = 200
-embedding_size = 64
-batch_size = 512
+embedding_size = 8
+batch_size = 128
 col = pymongo.MongoClient().xingqiao.dataWithMsg1000
 data = list(col.find({}, {'_id': 0, 'status': 1, 'msg1000': 1}))
 data = [i['msg1000'][:word_size] + [i['status']] for i in data]

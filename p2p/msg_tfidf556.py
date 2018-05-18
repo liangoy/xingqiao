@@ -7,7 +7,7 @@ from util import ml
 import json
 
 word_size = 100
-embedding_size = 8
+embedding_size = 2
 batch_size = 8192
 # 长度大于10,正反各占一半,!里面有将近一般的短信重复,200以上
 with open('/usr/local/oybb/project/xingqiao_data/msgTfidf556_train') as f:
@@ -15,22 +15,23 @@ with open('/usr/local/oybb/project/xingqiao_data/msgTfidf556_train') as f:
 #..........................................................................
 with open('/usr/local/oybb/project/xingqiao_data/msgTfidf556_test') as f:
     final_test_data = json.loads(f.read())
-final_test_data_t = np.array([i for i in final_test_data if i[-1] == 1])
 final_test_data_f = np.array([i for i in final_test_data if i[-1] == 0])
-
+final_test_data_t = np.array([i for i in final_test_data if i[-1] == 1])
 
 def test(batch_size=batch_size, times=10):
     score = []
+    q=[]
     for i in range(times):
         r_t = np.random.randint(0, len(final_test_data_t), int(batch_size / 2))
         r_f = np.random.randint(0, len(final_test_data_f), int(batch_size / 2))
         data = np.concatenate([final_test_data_t[r_t], final_test_data_f[r_f]])
-        s = sess.run(loss, feed_dict={x: data[:, :-1], y_: data[:, -1]})
-        score.append(s)
-    return np.mean(score)
+        out = sess.run((y_,y,loss), feed_dict={x: data[:, :-1], y_: data[:, -1]})
+        score.append(out[2])
+        q.append(1-len([i for i in out[0]+out[1]if 0.5<i<1.5])/batch_size)
+    return np.mean(score),np.mean(q)
 #..........................................................................
-train_data_t = np.array([i for i in data if i[-1] == 1])
 train_data_f = np.array([i for i in data if i[-1] == 0])
+train_data_t = np.array([i for i in data if i[-1] == 1])[:len(train_data_f)]
 
 data_for_test = np.concatenate([train_data_t[int(-1 * batch_size / 2):], train_data_f[int(-1 * batch_size / 2):]])
 x_test, y_test = data_for_test[:,:-1],data_for_test[:,-1]
@@ -90,22 +91,6 @@ for i in range(10 ** 10):
         qtrain = 1 - len([i for i in train_y + y_train if 0.5 <= i <= 1.5]) / batch_size
 
         print(train_loss, test_loss, qtrain, qtest,test())
-
-with open('/usr/local/oybb/project/xingqiao_data/msgTfidf556_test') as f:
-    final_test_data = json.loads(f.read())
-final_test_data_t = np.array([i for i in final_test_data if i[-1] == 1])
-final_test_data_f = np.array([i for i in final_test_data if i[-1] == 0])
-
-
-def test(batch_size=batch_size, times=10):
-    score = []
-    for i in range(times):
-        r_t = np.random.randint(0, len(final_test_data_t), int(batch_size / 2))
-        r_f = np.random.randint(0, len(final_test_data_f), int(batch_size / 2))
-        data = np.concatenate([final_test_data_t[r_t], final_test_data_f[r_f]])
-        s = sess.run(loss, feed_dict={x: data[:, :-1], y_: data[:, -1]})
-        score.append(s)
-    return np.mean(score)
 
 oo=list(pymongo.MongoClient().xingqiao.dataWithMsg.find())
 w2i={i['word']:i['index'] for i in  pymongo.MongoClient().xingqiao.w2iGtTfidfGt5000.find()}

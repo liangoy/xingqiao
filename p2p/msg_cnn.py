@@ -62,7 +62,7 @@ gv = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
 # loss=tf.reduce_mean((y-y_)**2)
 l2_loss = tf.contrib.layers.apply_regularization(tf.contrib.layers.l2_regularizer(0.01, scope=None), weights_list=gv)
 all_loss = loss + l2_loss
-optimizer = tf.train.AdamOptimizer(learning_rate=0.0001).minimize(loss)
+optimizer = tf.train.AdamOptimizer(learning_rate=0.001).minimize(all_loss)
 # ...................................................................
 sess = tf.Session()
 sess.run(tf.global_variables_initializer())

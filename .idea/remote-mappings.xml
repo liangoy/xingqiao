@@ -10,6 +10,13 @@
             </list>
           </settings>
         </remote-mappings>
+        <remote-mappings server-id="python@sftp://root@120.76.231.5:22/usr/local/bin/python3.5">
+          <settings>
+            <list>
+              <mapping local-root="$PROJECT_DIR$" remote-root="/usr/local/oybb/project/xingqiao" />
+            </list>
+          </settings>
+        </remote-mappings>
       </list>
     </list>
   </component>
