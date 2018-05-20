@@ -63,7 +63,7 @@ c3 = ml.conv2d(c2, conv_filter=[5, 1, 4, 8], padding='VALID', ksize=[1, 1, 1, 1]
                pool_padding='VALID')
 # lay1 = tf.reshape(c2, [batch_size, -1])
 # lay2 = ml.layer_basic(ml.bn(lay1), 1)
-out = ml.bn_with_wb (tf.reshape(c3, shape=[batch_size, 8]))
+out = tf.reshape(c3, shape=[batch_size, 8])
 y = tf.nn.sigmoid(ml.layer_basic(out, 1))[:, 0]
 loss = tf.reduce_sum(-y_ * tf.log(y + 0.000000001) - (1 - y_) * tf.log(1 - y + 0.00000001)) / batch_size / tf.log(2.0)
 gv = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)

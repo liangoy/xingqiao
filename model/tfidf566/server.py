@@ -50,19 +50,13 @@ class Server():
         saver.restore(self.sess, '/usr/local/oybb/project/xingqiao_model/./tfidf566')
 
     def cut_word(self, text):
-        return ([self.w2i.get(i, 1) for i in jieba.cut(text)] + [0] * 100)[:100]
+        return [self.w2i.get(i, 1) for i in jieba.cut(text)]
 
-    def get_score(self, text_list, m='r'):
-        score = []
-        text_list_cut1 = [self.cut_word(i) for i in text_list[:1000]]
-        text_list_cut2 = [self.cut_word(i) for i in text_list[1000:2000]]
-        if text_list_cut1:
-            r1 = np.random.randint(0,len(self.data),self.batch_size - len(text_list_cut1))
-            data = np.concatenate([self.data[r1], text_list_cut1])
-            score.extend(list(self.sess.run(self.y, feed_dict={self.x: data})[len(r1):]))
-        if text_list_cut2:
-            r1 = np.random.randint(0,len(self.data),self.batch_size - len(text_list_cut2))
-            data = np.concatenate([self.data[r1], text_list_cut2])
-            score.extend(list(self.sess.run(self.y, feed_dict={self.x: data})[len(r1):]))
-        score = [1 if i>0.5 else 0 for i in score]
-        return (0.52/0.5)**sum(score)*(0.48/0.5)**(len(score)-sum(score))
+    def get_score(self, lis, m='r'):
+        cnt=len(lis)
+        lis=lis+lis[:self.batch_size-cnt%self.batch_size]
+        score=[]
+        for i in range(cnt//self.batch_size+1):
+            d=lis[i*self.batch_size:i*self.batch_size+self.batch_size]
+            score.extend(list(self.sess.run(self.y, feed_dict={self.x: d})))
+        return score[:cnt]
