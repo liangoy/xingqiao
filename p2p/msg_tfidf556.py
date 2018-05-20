@@ -10,13 +10,13 @@ word_size = 100
 embedding_size = 2
 batch_size = 8192
 # 长度大于10,正反各占一半,!里面有将近一般的短信重复,200以上
-with open('/usr/local/oybb/project/xingqiao_data/msgTfidf556_train') as f:
+with open('/usr/local/oybb/project/xingqiao_data/msgTfidf566') as f:
     data = json.loads(f.read())
 #..........................................................................
-with open('/usr/local/oybb/project/xingqiao_data/msgTfidf556_test') as f:
-    final_test_data = json.loads(f.read())
-final_test_data_f = np.array([i for i in final_test_data if i[-1] == 0])
-final_test_data_t = np.array([i for i in final_test_data if i[-1] == 1])
+data=[(i+[0]*word_size)[:word_size+2]for i in data]
+
+final_test_data_f = np.array([i for i in data if i[1] == 0 and i[0]==0])
+final_test_data_t = np.array([i for i in data if i[1] == -1 and i[0]==0])
 
 def test(batch_size=batch_size, times=10):
     score = []
@@ -25,16 +25,16 @@ def test(batch_size=batch_size, times=10):
         r_t = np.random.randint(0, len(final_test_data_t), int(batch_size / 2))
         r_f = np.random.randint(0, len(final_test_data_f), int(batch_size / 2))
         data = np.concatenate([final_test_data_t[r_t], final_test_data_f[r_f]])
-        out = sess.run((y_,y,loss), feed_dict={x: data[:, :-1], y_: data[:, -1]})
+        out = sess.run((y_,y,loss), feed_dict={x: data[:, 2:], y_: -1*data[:, 1]})
         score.append(out[2])
         q.append(1-len([i for i in out[0]+out[1]if 0.5<i<1.5])/batch_size)
     return np.mean(score),np.mean(q)
 #..........................................................................
-train_data_f = np.array([i for i in data if i[-1] == 0])
-train_data_t = np.array([i for i in data if i[-1] == 1])[:len(train_data_f)]
+train_data_f = np.array([i for i in data if i[1] == 0 and i[0]==-1])
+train_data_t = np.array([i for i in data if i[1] == -1 and i[0]==-1])[:len(train_data_f)]
 
 data_for_test = np.concatenate([train_data_t[int(-1 * batch_size / 2):], train_data_f[int(-1 * batch_size / 2):]])
-x_test, y_test = data_for_test[:,:-1],data_for_test[:,-1]
+x_test, y_test = data_for_test[:,2:],-1*data_for_test[:,1]
 
 print('data pre-processing is done')
 
@@ -44,7 +44,7 @@ def next():
     r_t=np.random.randint(0,len(train_data_t),int(batch_size/2))
     r_f=np.random.randint(0,len(train_data_f),int(batch_size/2))
     data=np.concatenate([train_data_t[r_t],train_data_f[r_f]])
-    return data[:,:-1],data[:,-1]
+    return data[:,2:],-1*data[:,1]
 
 
 x = tf.placeholder(shape=[batch_size, word_size], dtype=tf.int32)
@@ -63,7 +63,7 @@ c3 = ml.conv2d(c2, conv_filter=[5, 1, 4, 8], padding='VALID', ksize=[1, 1, 1, 1]
                pool_padding='VALID')
 # lay1 = tf.reshape(c2, [batch_size, -1])
 # lay2 = ml.layer_basic(ml.bn(lay1), 1)
-out = tf.reshape(c3, shape=[batch_size, 8])
+out = ml.bn_with_wb (tf.reshape(c3, shape=[batch_size, 8]))
 y = tf.nn.sigmoid(ml.layer_basic(out, 1))[:, 0]
 loss = tf.reduce_sum(-y_ * tf.log(y + 0.000000001) - (1 - y_) * tf.log(1 - y + 0.00000001)) / batch_size / tf.log(2.0)
 gv = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
@@ -82,15 +82,11 @@ for i in range(10 ** 10):
     sess.run(optimizer, feed_dict={x: x_train, y_: y_train})
 
     if i % 10 == 0:
-        train_loss = sess.run(loss, feed_dict={x: x_train, y_: y_train})
-        test_loss = sess.run(loss, feed_dict={x: x_test, y_: y_test})
-        test_y = sess.run(y, feed_dict={x: x_test, y_: y_test})
+        train_y, train_loss = sess.run((y, loss), feed_dict={x: x_train, y_: y_train})
+        test_y, test_loss = sess.run((y, loss), feed_dict={x: x_test, y_: y_test})
         qtest = 1 - len([i for i in test_y + y_test if 0.5 <= i <= 1.5]) / batch_size
-
-        train_y = sess.run(y, feed_dict={x: x_train, y_: y_train})
         qtrain = 1 - len([i for i in train_y + y_train if 0.5 <= i <= 1.5]) / batch_size
-
-        print(train_loss, test_loss, qtrain, qtest,test())
+        print(train_loss, test_loss, qtrain, qtest, test())
 
 oo=list(pymongo.MongoClient().xingqiao.dataWithMsg.find())
 w2i={i['word']:i['index'] for i in  pymongo.MongoClient().xingqiao.w2iGtTfidfGt5000.find()}
